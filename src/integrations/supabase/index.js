@@ -5,6 +5,7 @@ import React from "react";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_PROJECT_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_API_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+export { supabase };
 
 export const queryClient = new QueryClient();
 export function SupabaseProvider({ children }) {
