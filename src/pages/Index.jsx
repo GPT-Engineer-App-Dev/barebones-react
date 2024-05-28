@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../integrations/supabase/index.js";
 import { useUpdateEvent, useDeleteEvent } from "../integrations/supabase/index.js";
 import { Input, FormControl, FormLabel } from "@chakra-ui/react";
 import { Container, Text, VStack, Heading, Button, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, useDisclosure, Image } from "@chakra-ui/react";
@@ -38,25 +39,25 @@ const Index = () => {
   };
 
   const handleSaveClick = async () => {
-    let pdfUrl = eventData.pdf_url;
+  let pdfUrl = eventData.pdf_url;
 
-    if (pdfFile) {
-      const { data, error } = await supabase.storage
-        .from('event-pdfs')
-        .upload(`public/${pdfFile.name}`, pdfFile);
+  if (pdfFile) {
+    const { data, error } = await supabase.storage
+      .from('event-pdfs')
+      .upload(`public/${pdfFile.name}`, pdfFile);
 
-      if (error) {
-        console.error("Error uploading PDF:", error);
-        return;
-      }
-
-      pdfUrl = data.Key;
+    if (error) {
+      console.error("Error uploading PDF:", error);
+      return;
     }
 
-    updateEvent.mutate({ ...eventData, id: selectedEvent.id, pdf_url: pdfUrl });
-    setIsEditing(false);
-    onClose();
-  };
+    pdfUrl = data.Key;
+  }
+
+  updateEvent.mutate({ ...eventData, id: selectedEvent.id, pdf_url: pdfUrl });
+  setIsEditing(false);
+  onClose();
+};
 
   const handleDeleteClick = () => {
     deleteEvent.mutate(selectedEvent.id);
