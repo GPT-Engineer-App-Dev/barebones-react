@@ -104,3 +104,23 @@ export const useAddVenue = () => {
         },
     });
 };
+
+export const useUpdateVenue = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (updatedVenue) => fromSupabase(supabase.from('venues').update(updatedVenue).eq('id', updatedVenue.id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries('venues');
+        },
+    });
+};
+
+export const useDeleteVenue = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (venueId) => fromSupabase(supabase.from('venues').delete().eq('id', venueId)),
+        onSuccess: () => {
+            queryClient.invalidateQueries('venues');
+        },
+    });
+};
