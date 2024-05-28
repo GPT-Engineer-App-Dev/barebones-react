@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUpdateEvent, useDeleteEvent } from "../integrations/supabase/index.js";
 import { Input, FormControl, FormLabel } from "@chakra-ui/react";
 import { Container, Text, VStack, Heading, Button, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, useDisclosure } from "@chakra-ui/react";
@@ -7,12 +7,24 @@ import { useEvents } from "../integrations/supabase/index.js";
 
 const Index = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [filterText, setFilterText] = useState("");
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [eventData, setEventData] = useState({ name: "", date: "", description: "" });
   const { data: events, isLoading, error } = useEvents();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
+
+  useEffect(() => {
+    if (events) {
+      setFilteredEvents(
+        events.filter((event) =>
+          event.name.toLowerCase().includes(filterText.toLowerCase())
+        )
+      );
+    }
+  }, [filterText, events]);
 
   const handleEventClick = (event) => {
     setSelectedEvent(event);
@@ -48,6 +60,14 @@ const Index = () => {
         <Button leftIcon={<FaRocket />} colorScheme="teal" size="lg" mt={6}>
           Get Started
         </Button>
+        <FormControl>
+          <FormLabel>Filter Events</FormLabel>
+          <Input
+            placeholder="Enter event name"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
+        </FormControl>
         {isLoading && <Text>Loading events...</Text>}
         {error && <Text>Error loading events: {error.message}</Text>}
         {events && (
@@ -60,7 +80,7 @@ const Index = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {events.map((event) => (
+              {filteredEvents.map((event) => (
                 <Tr key={event.id} onClick={() => handleEventClick(event)} cursor="pointer">
                   <Td>{event.name}</Td>
                   <Td>{event.date}</Td>
