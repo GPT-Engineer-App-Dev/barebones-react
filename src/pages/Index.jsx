@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useUpdateEvent, useDeleteEvent } from "../integrations/supabase/index.js";
 import { Input, FormControl, FormLabel } from "@chakra-ui/react";
-import { Container, Text, VStack, Heading, Button, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, useDisclosure } from "@chakra-ui/react";
+import { Container, Text, VStack, Heading, Button, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, useDisclosure, Image } from "@chakra-ui/react";
 import { FaRocket } from "react-icons/fa";
 import { useEvents } from "../integrations/supabase/index.js";
 
@@ -11,7 +11,7 @@ const Index = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [eventData, setEventData] = useState({ name: "", date: "", description: "" });
+  const [eventData, setEventData] = useState({ name: "", date: "", description: "", image_url: "" });
   const { data: events, isLoading, error } = useEvents();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -28,7 +28,7 @@ const Index = () => {
 
   const handleEventClick = (event) => {
     setSelectedEvent(event);
-    setEventData({ name: event.name, date: event.date, description: event.description });
+    setEventData({ name: event.name, date: event.date, description: event.description, image_url: event.image_url });
     onOpen();
   };
 
@@ -77,6 +77,7 @@ const Index = () => {
                 <Th>Name</Th>
                 <Th>Date</Th>
                 <Th>Description</Th>
+                <Th>Image</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -85,6 +86,11 @@ const Index = () => {
                   <Td>{event.name}</Td>
                   <Td>{event.date}</Td>
                   <Td>{event.description}</Td>
+                  <Td>
+                    {event.image_url && (
+                      <Image src={event.image_url} alt={event.name} boxSize="50px" objectFit="cover" />
+                    )}
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
@@ -111,6 +117,10 @@ const Index = () => {
                   <FormLabel>Description</FormLabel>
                   <Input name="description" value={eventData.description} onChange={handleChange} />
                 </FormControl>
+                <FormControl>
+                  <FormLabel>Image URL</FormLabel>
+                  <Input name="image_url" value={eventData.image_url} onChange={handleChange} />
+                </FormControl>
               </>
             ) : (
               <>
@@ -123,6 +133,9 @@ const Index = () => {
                   ))
                 ) : (
                   <Text>No comments available.</Text>
+                )}
+                {selectedEvent?.image_url && (
+                  <Image src={selectedEvent.image_url} alt={selectedEvent.name} />
                 )}
               </>
             )}
