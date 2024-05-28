@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useUpdateEvent, useDeleteEvent } from "../integrations/supabase/index.js";
-import { Input, FormControl, FormLabel } from "@chakra-ui/react";
+import { Input, FormControl, FormLabel, Box } from "@chakra-ui/react";
 import { Container, Text, VStack, Heading, Button, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, useDisclosure, Image } from "@chakra-ui/react";
 import { FaRocket } from "react-icons/fa";
 import { useEvents } from "../integrations/supabase/index.js";
+import { useDropzone } from 'react-dropzone';
 
 const Index = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -12,6 +13,7 @@ const Index = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [eventData, setEventData] = useState({ name: "", date: "", description: "", image_url: "" });
+  const [selectedImage, setSelectedImage] = useState(null);
   const { data: events, isLoading, error } = useEvents();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -51,6 +53,18 @@ const Index = () => {
     const { name, value } = e.target;
     setEventData((prevData) => ({ ...prevData, [name]: value }));
   };
+
+  const onDrop = (acceptedFiles) => {
+    const file = acceptedFiles[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedImage(reader.result);
+      setEventData((prevData) => ({ ...prevData, image_url: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: 'image/*' });
 
   return (
     <Container centerContent maxW="container.md" height="100vh" display="flex" flexDirection="column" justifyContent="center" alignItems="center">
@@ -118,8 +132,16 @@ const Index = () => {
                   <Input name="description" value={eventData.description} onChange={handleChange} />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Image URL</FormLabel>
-                  <Input name="image_url" value={eventData.image_url} onChange={handleChange} />
+                  <FormLabel>Image</FormLabel>
+                  <Box {...getRootProps()} border="2px dashed" borderColor={isDragActive ? "teal.500" : "gray.200"} p={4} textAlign="center" cursor="pointer">
+                    <input {...getInputProps()} />
+                    {isDragActive ? (
+                      <Text>Drop the image here ...</Text>
+                    ) : (
+                      <Text>Drag 'n' drop an image here, or click to select one</Text>
+                    )}
+                    {selectedImage && <Image src={selectedImage} alt="Selected" mt={4} />}
+                  </Box>
                 </FormControl>
               </>
             ) : (
