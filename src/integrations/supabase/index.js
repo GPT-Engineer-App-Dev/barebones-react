@@ -29,6 +29,7 @@ Event // table: events
     date: string
     description: string
     venue_id: number // foreign key to Venue
+    image_url: string // URL to the event image
     comments?: Comment[] // available if .select('*,comments(*)') was done
 
 Comment // table: comments
@@ -52,7 +53,7 @@ Venue // table: venues
 
 export const useEvents = () => useQuery({
     queryKey: ['events'],
-    queryFn: () => fromSupabase(supabase.from('events').select('*,comments(*)')),
+    queryFn: () => fromSupabase(supabase.from('events').select('*,comments(*),image_url')),
 });
 
 export const useUpdateEvent = () => {
