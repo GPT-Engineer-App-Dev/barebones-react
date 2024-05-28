@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../integrations/supabase/index.js";
 import { useUpdateEvent, useDeleteEvent } from "../integrations/supabase/index.js";
 import { Input, FormControl, FormLabel } from "@chakra-ui/react";
 import { Container, Text, VStack, Heading, Button, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, useDisclosure, Image } from "@chakra-ui/react";
@@ -12,6 +13,7 @@ const Index = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [eventData, setEventData] = useState({ name: "", date: "", description: "", image_url: "" });
+  const [pdfFile, setPdfFile] = useState(null);
   const { data: events, isLoading, error } = useEvents();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -36,11 +38,26 @@ const Index = () => {
     setIsEditing(true);
   };
 
-  const handleSaveClick = () => {
-    updateEvent.mutate({ ...eventData, id: selectedEvent.id });
-    setIsEditing(false);
-    onClose();
-  };
+  const handleSaveClick = async () => {
+  let pdfUrl = eventData.pdf_url;
+
+  if (pdfFile) {
+    const { data, error } = await supabase.storage
+      .from('event-pdfs')
+      .upload(`public/${pdfFile.name}`, pdfFile);
+
+    if (error) {
+      console.error("Error uploading PDF:", error);
+      return;
+    }
+
+    pdfUrl = data.Key;
+  }
+
+  updateEvent.mutate({ ...eventData, id: selectedEvent.id, pdf_url: pdfUrl });
+  setIsEditing(false);
+  onClose();
+};
 
   const handleDeleteClick = () => {
     deleteEvent.mutate(selectedEvent.id);
@@ -48,8 +65,12 @@ const Index = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEventData((prevData) => ({ ...prevData, [name]: value }));
+    const { name, value, files } = e.target;
+    if (name === "pdf") {
+      setPdfFile(files[0]);
+    } else {
+      setEventData((prevData) => ({ ...prevData, [name]: value }));
+    }
   };
 
   return (
@@ -121,6 +142,10 @@ const Index = () => {
                   <FormLabel>Image URL</FormLabel>
                   <Input name="image_url" value={eventData.image_url} onChange={handleChange} />
                 </FormControl>
+                <FormControl>
+                  <FormLabel>PDF File</FormLabel>
+                  <Input type="file" name="pdf" onChange={handleChange} />
+                </FormControl>
               </>
             ) : (
               <>
@@ -136,6 +161,11 @@ const Index = () => {
                 )}
                 {selectedEvent?.image_url && (
                   <Image src={selectedEvent.image_url} alt={selectedEvent.name} />
+                )}
+                {selectedEvent?.pdf_url && (
+                  <Text>
+                    <strong>PDF:</strong> <a href={selectedEvent.pdf_url} target="_blank" rel="noopener noreferrer">View PDF</a>
+                  </Text>
                 )}
               </>
             )}
