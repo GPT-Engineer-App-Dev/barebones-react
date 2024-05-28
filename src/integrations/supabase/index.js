@@ -55,10 +55,20 @@ export const useEvents = () => useQuery({
     queryFn: () => fromSupabase(supabase.from('events').select('*,comments(*)')),
 });
 
-export const useAddEvent = () => {
+export const useUpdateEvent = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newEvent) => fromSupabase(supabase.from('events').insert([newEvent])),
+        mutationFn: (updatedEvent) => fromSupabase(supabase.from('events').update(updatedEvent).eq('id', updatedEvent.id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries('events');
+        },
+    });
+};
+
+export const useDeleteEvent = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (eventId) => fromSupabase(supabase.from('events').delete().eq('id', eventId)),
         onSuccess: () => {
             queryClient.invalidateQueries('events');
         },
